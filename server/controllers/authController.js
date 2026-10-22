@@ -195,8 +195,168 @@ const getProfile = async (req, res) => {
   }
 };
 
+// @desc    Update Authenticated User Profile
+// @route   PUT /api/auth/profile
+// @access  Private (Protected)
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    const { name, mobile, address, city, state, pincode, email } = req.body;
+
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Full name is required.' });
+    }
+    if (!mobile || !mobile.trim()) {
+      return res.status(400).json({ success: false, message: 'Mobile number is required.' });
+    }
+    if (!address || !address.trim()) {
+      return res.status(400).json({ success: false, message: 'Residential address is required.' });
+    }
+    if (!city || !city.trim()) {
+      return res.status(400).json({ success: false, message: 'City / Municipality is required.' });
+    }
+    if (!state || !state.trim()) {
+      return res.status(400).json({ success: false, message: 'State is required.' });
+    }
+    if (!pincode || !pincode.trim()) {
+      return res.status(400).json({ success: false, message: 'PIN code is required.' });
+    }
+
+    // Check email uniqueness if email is changed
+    if (email && email.toLowerCase().trim() !== user.email) {
+      const existing = await User.findOne({ email: email.toLowerCase().trim(), _id: { $ne: user._id } });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: 'An account with this email address already exists.',
+        });
+      }
+      user.email = email.toLowerCase().trim();
+    }
+
+    // Update authorized profile fields only (role, _id, isActive, department remain strictly protected)
+    user.name = name.trim();
+    user.mobile = mobile.trim();
+    user.address = address.trim();
+    user.city = city.trim();
+    user.state = state.trim();
+    user.pincode = pincode.trim();
+
+    await user.save();
+
+    // Audit log
+    await logAudit({
+      user: user._id,
+      userName: user.name,
+      role: user.role,
+      action: 'USER_PROFILE_UPDATED',
+      targetRecordId: user._id.toString(),
+      details: {
+        updatedFields: ['name', 'mobile', 'address', 'city', 'state', 'pincode'],
+      },
+      ipAddress: req.ip,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    console.error('[Update Profile Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error updating profile',
+    });
+  }
+};
+
+// @desc    Change Password for Authenticated User
+// @route   PUT /api/auth/change-password
+// @access  Private (Protected)
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required.',
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long.',
+      });
+    }
+
+    if (confirmNewPassword && newPassword !== confirmNewPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password and confirm password do not match.',
+      });
+    }
+
+    // Load user with password field
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect.',
+      });
+    }
+
+    user.password = newPassword;
+    await user.save(); // triggers bcrypt pre('save') hash
+
+    // Audit log
+    await logAudit({
+      user: user._id,
+      userName: user.name,
+      role: user.role,
+      action: 'USER_PASSWORD_CHANGED',
+      targetRecordId: user._id.toString(),
+      details: { role: user.role },
+      ipAddress: req.ip,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password changed successfully.',
+    });
+  } catch (error) {
+    console.error('[Change Password Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error changing password',
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  updateProfile,
+  changePassword,
 };
+
