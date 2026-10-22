@@ -1,0 +1,472 @@
+/* =========================================
+   MUNICIPAL LOGIN PAGE
+   ========================================= */
+
+.login-page {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  background: #f5f8fc;
+  padding: 45px 20px 70px;
+}
+
+/* =========================================
+   MAIN CONTAINER
+   ========================================= */
+
+.login-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* =========================================
+   HEADING
+   ========================================= */
+
+.login-heading {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-shield {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: #e8f1fc;
+  color: #12366b;
+
+  font-size: 25px;
+}
+
+.login-heading h1 {
+  margin: 0;
+
+  color: #12366b;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.login-gold-line {
+  width: 46px;
+  height: 3px;
+
+  margin: 11px auto 12px;
+
+  border-radius: 5px;
+  background: #f4bd28;
+}
+
+.login-heading p {
+  margin: 0;
+
+  color: #5f6b7a;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* =========================================
+   LOGIN CARD
+   ========================================= */
+
+.login-card {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #dce4ee;
+  border-radius: 10px;
+
+  padding: 28px 26px 24px;
+
+  box-shadow:
+    0 5px 18px rgba(24, 59, 104, 0.08);
+}
+
+/* =========================================
+   FORM FIELD
+   ========================================= */
+
+.login-field {
+  margin-bottom: 20px;
+}
+
+.login-field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #172b4d;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-field label span {
+  color: #dc3545;
+}
+
+/* =========================================
+   INPUT
+   ========================================= */
+
+.login-input-group {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: 48px;
+
+  background: #ffffff;
+
+  border: 1px solid #ccd6e2;
+  border-radius: 7px;
+
+  overflow: hidden;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-input-group:focus-within {
+  border-color: #1b4f8a;
+
+  box-shadow:
+    0 0 0 3px rgba(27, 79, 138, 0.1);
+}
+
+.login-input-icon {
+  width: 42px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: #4e5f73;
+
+  background: #f8fafc;
+
+  border-right: 1px solid #e1e7ef;
+
+  font-size: 16px;
+}
+
+.login-input-group input {
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+  outline: none;
+
+  padding: 0 13px;
+
+  color: #172b4d;
+  background: #ffffff;
+
+  font-size: 14px;
+}
+
+.login-input-group input::placeholder {
+  color: #8793a3;
+}
+
+.login-input-group input:focus {
+  outline: none;
+}
+
+/* =========================================
+   PASSWORD TOGGLE
+   ========================================= */
+
+.password-toggle {
+  width: 43px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #68778a;
+
+  cursor: pointer;
+
+  font-size: 16px;
+}
+
+.password-toggle:hover {
+  color: #12366b;
+}
+
+/* =========================================
+   SIGN IN BUTTON
+   ========================================= */
+
+.login-submit {
+  width: 100%;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 4px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: #0b3270;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 8px rgba(11, 50, 112, 0.18);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: #08285b;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(11, 50, 112, 0.22);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   REGISTER
+   ========================================= */
+
+.login-register {
+  margin-top: 22px;
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+.login-register span {
+  color: #697586;
+}
+
+.login-register a {
+  color: #0d6efd;
+
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+.login-register a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   ALERTS
+   ========================================= */
+
+.login-alert {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 10px 12px;
+
+  margin-bottom: 18px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+}
+
+.login-alert-warning {
+  color: #664d03;
+  background: #fff3cd;
+  border: 1px solid #ffecb5;
+}
+
+.login-alert-danger {
+  color: #842029;
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+}
+
+.login-alert i {
+  flex-shrink: 0;
+}
+
+/* =========================================
+   SUBTLE MUNICIPAL BACKGROUND
+   ========================================= */
+
+.login-city-background {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 220px;
+
+  pointer-events: none;
+
+  opacity: 0.32;
+}
+
+/* Ground line */
+
+.login-city-background::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 42px;
+
+  height: 1px;
+
+  background: #cbdcf0;
+}
+
+/* Buildings */
+
+.city-building {
+  position: absolute;
+
+  bottom: 42px;
+
+  border: 1px solid #c8daef;
+
+  background: rgba(232, 241, 252, 0.35);
+}
+
+/* Building 1 */
+
+.building-one {
+  left: 3%;
+  width: 75px;
+  height: 95px;
+}
+
+/* Building 2 */
+
+.building-two {
+  left: 14%;
+  width: 105px;
+  height: 125px;
+}
+
+/* Building 3 */
+
+.building-three {
+  left: 31%;
+  width: 62px;
+  height: 80px;
+}
+
+/* Building 4 */
+
+.building-four {
+  right: 18%;
+  width: 90px;
+  height: 115px;
+}
+
+/* Building 5 */
+
+.building-five {
+  right: 4%;
+  width: 115px;
+  height: 135px;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 576px) {
+
+  .login-page {
+    min-height: calc(100vh - 60px);
+
+    padding: 32px 15px 50px;
+  }
+
+  .login-container {
+    max-width: 100%;
+  }
+
+  .login-heading {
+    margin-bottom: 20px;
+  }
+
+  .login-heading h1 {
+    font-size: 24px;
+  }
+
+  .login-heading p {
+    font-size: 13px;
+  }
+
+  .login-shield {
+    width: 48px;
+    height: 48px;
+
+    font-size: 21px;
+
+    margin-bottom: 11px;
+  }
+
+  .login-card {
+    padding: 24px 20px 21px;
+  }
+
+  .login-field {
+    margin-bottom: 17px;
+  }
+
+  .login-city-background {
+    height: 150px;
+  }
+
+}
