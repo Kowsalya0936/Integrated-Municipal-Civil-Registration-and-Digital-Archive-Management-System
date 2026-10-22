@@ -11,6 +11,8 @@ const officerRoutes = require('./routes/officerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 
+const path = require('path');
+
 const app = express();
 
 // Middleware
@@ -22,6 +24,9 @@ app.use(
 );
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static assets (e.g. municipal illustrations, public documents)
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // Connect Database & Seed Default Accounts
 connectDB().then(() => {

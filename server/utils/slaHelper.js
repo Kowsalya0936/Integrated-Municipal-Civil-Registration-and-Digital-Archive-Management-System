@@ -92,20 +92,48 @@ const addWorkingDays = (startDate, numberOfWorkingDays, holidays = defaultHolida
 };
 
 /**
+ * Configuration flags for SLA
+ * DEMO_SLA_MODE: When true, newly submitted applications receive a 2-minute SLA deadline.
+ * When false, the standard production 48 working hours SLA (excluding weekends & holidays) is used.
+ */
+const DEMO_SLA_MODE = process.env.DEMO_SLA_MODE !== undefined
+  ? process.env.DEMO_SLA_MODE === 'true'
+  : true; // Default to true for demo testing
+
+const DEMO_SLA_MINUTES = 2;
+
+/**
  * Calculate Holiday-Aware SLA Deadline for an Application.
  *
- * Standard municipal turnaround SLA is 48 working hours (2 working days).
- * Government holidays encountered within the SLA turnaround window are skipped
- * and extend the deadline by 24 hours per holiday.
+ * In Demo Mode (DEMO_SLA_MODE = true):
+ *   Sets SLA deadline to exactly DEMO_SLA_MINUTES (2 minutes / 120,000 ms)
+ *   after submission timestamp without applying working-day/holiday extensions.
+ *
+ * In Production Mode (DEMO_SLA_MODE = false):
+ *   Standard municipal turnaround SLA is 48 working hours (2 working days).
+ *   Government holidays encountered within the SLA turnaround window are skipped
+ *   and extend the deadline by 24 hours per holiday.
  *
  * @param {Date|string|number} [submittedAt=new Date()] - Application submission timestamp
  * @param {number} [slaHours=48] - Total working hours required (default 48 hours = 2 working days)
  * @param {Object} [holidays=defaultHolidays] - Holiday calendar config
+ * @param {boolean} [demoMode=DEMO_SLA_MODE] - Explicit override for demo mode
  * @returns {Date}
  */
-
-const calculateSlaDeadline = (submittedAt = new Date(), slaHours = 48, holidays = defaultHolidays) => {
+const calculateSlaDeadline = (
+  submittedAt = new Date(),
+  slaHours = 48,
+  holidays = defaultHolidays,
+  demoMode = DEMO_SLA_MODE
+) => {
   const start = submittedAt instanceof Date ? submittedAt : new Date(submittedAt);
+  const baseTime = isNaN(start.getTime()) ? Date.now() : start.getTime();
+
+  if (demoMode) {
+    // Demo SLA: exactly 2 minutes (120,000 ms) from submission
+    return new Date(baseTime + DEMO_SLA_MINUTES * 60 * 1000);
+  }
+
   if (isNaN(start.getTime())) return new Date(Date.now() + slaHours * 60 * 60 * 1000);
 
   const workingDays = Math.ceil(slaHours / 24);
@@ -174,6 +202,8 @@ const buildEscalatedQuery = function (now) {
 };
 
 module.exports = {
+  DEMO_SLA_MODE,
+  DEMO_SLA_MINUTES,
   formatLocalDateString,
   isGovernmentHoliday,
   isWeekend,
