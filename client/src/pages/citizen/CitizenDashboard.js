@@ -15,6 +15,7 @@ const CitizenDashboard = () => {
   const [recentApplications, setRecentApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showApplyModal, setShowApplyModal] = useState(false);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -114,6 +115,7 @@ const CitizenDashboard = () => {
   };
 
   return (
+    <>
     <div className="citizen-dashboard-page py-4">
       <div className="container-fluid px-3 px-xl-4">
         <div className="row g-4">
@@ -144,10 +146,13 @@ const CitizenDashboard = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/citizen/apply/birth" className="citizen-nav-item">
+                  <button
+                    onClick={() => setShowApplyModal(true)}
+                    className="citizen-nav-item w-100 text-start border-0 bg-transparent"
+                  >
                     <i className="bi bi-file-earmark-plus"></i>
                     <span>Apply for Certificate</span>
-                  </Link>
+                  </button>
                 </li>
                 <li>
                   <Link to="/citizen/applications" className="citizen-nav-item">
@@ -312,9 +317,12 @@ const CitizenDashboard = () => {
                   <div className="p-5 text-center text-muted">
                     <i className="bi bi-inbox fs-1 d-block mb-2"></i>
                     <p className="mb-3">You have not submitted any certificate applications yet.</p>
-                    <Link to="/citizen/apply/birth" className="btn btn-primary btn-sm">
-                      <i className="bi bi-plus-lg me-1"></i> Apply for Your First Certificate
-                    </Link>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setShowApplyModal(true)}
+                    >
+                      <i className="bi bi-plus-lg me-1"></i> Apply for Certificate
+                    </button>
                   </div>
                 ) : (
                   <div className="table-responsive">
@@ -423,6 +431,153 @@ const CitizenDashboard = () => {
         </div>
       </div>
     </div>
+
+    {/* ── Certificate Type Selection Modal ── */}
+    {showApplyModal && (
+      <div
+        className="modal show d-block"
+        tabIndex="-1"
+        role="dialog"
+        style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        onClick={(e) => { if (e.target === e.currentTarget) setShowApplyModal(false); }}
+      >
+        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
+          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            {/* Modal Header */}
+            <div
+              className="modal-header border-0 pb-2 pt-4 px-4"
+              style={{ background: 'linear-gradient(135deg, #0f2b5c 0%, #1e4b8a 100%)' }}
+            >
+              <div>
+                <div className="small text-warning fw-semibold mb-1" style={{ fontSize: '0.72rem', letterSpacing: '0.6px' }}>
+                  CITIZEN PORTAL
+                </div>
+                <h5 className="modal-title fw-bold text-white mb-0">
+                  <i className="bi bi-file-earmark-plus-fill me-2 text-warning"></i>
+                  Apply for Certificate
+                </h5>
+                <div className="text-light opacity-75 small mt-1" style={{ fontSize: '0.82rem' }}>
+                  Select the certificate type to proceed
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close btn-close-white ms-auto"
+                aria-label="Close"
+                onClick={() => setShowApplyModal(false)}
+              ></button>
+            </div>
+
+            {/* Modal Body — two option cards */}
+            <div className="modal-body p-4">
+              <div className="row g-3">
+
+                {/* Birth Certificate Card */}
+                <div className="col-12">
+                  <Link
+                    to="/citizen/apply/birth"
+                    onClick={() => setShowApplyModal(false)}
+                    className="text-decoration-none d-block"
+                  >
+                    <div
+                      className="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'box-shadow 0.15s, border-color 0.15s',
+                        borderColor: '#bfdbfe',
+                        backgroundColor: '#eff6ff',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(29,78,216,0.15)';
+                        e.currentTarget.style.borderColor = '#3b82f6';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.borderColor = '#bfdbfe';
+                      }}
+                    >
+                      <div
+                        className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                        style={{ width: '52px', height: '52px', backgroundColor: '#1d4ed8' }}
+                      >
+                        <i className="bi bi-person-hearts text-white fs-4"></i>
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="fw-bold text-dark" style={{ fontSize: '1rem' }}>
+                          Birth Certificate
+                        </div>
+                        <div className="text-muted small">
+                          Register a new birth and apply for an official birth certificate
+                        </div>
+                      </div>
+                      <i className="bi bi-chevron-right text-primary fs-5 flex-shrink-0"></i>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* Death Certificate Card */}
+                <div className="col-12">
+                  <Link
+                    to="/citizen/apply/death"
+                    onClick={() => setShowApplyModal(false)}
+                    className="text-decoration-none d-block"
+                  >
+                    <div
+                      className="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'box-shadow 0.15s, border-color 0.15s',
+                        borderColor: '#fecaca',
+                        backgroundColor: '#fef2f2',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(220,38,38,0.15)';
+                        e.currentTarget.style.borderColor = '#ef4444';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.borderColor = '#fecaca';
+                      }}
+                    >
+                      <div
+                        className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                        style={{ width: '52px', height: '52px', backgroundColor: '#dc2626' }}
+                      >
+                        <i className="bi bi-file-earmark-medical text-white fs-4"></i>
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="fw-bold text-dark" style={{ fontSize: '1rem' }}>
+                          Death Certificate
+                        </div>
+                        <div className="text-muted small">
+                          Register a death and apply for an official death certificate
+                        </div>
+                      </div>
+                      <i className="bi bi-chevron-right text-danger fs-5 flex-shrink-0"></i>
+                    </div>
+                  </Link>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="modal-footer border-0 pt-0 pb-4 px-4 bg-white">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm px-4"
+                onClick={() => setShowApplyModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
