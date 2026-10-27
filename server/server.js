@@ -16,9 +16,31 @@ const path = require('path');
 const app = express();
 
 // Middleware
+
+// Build the list of allowed CORS origins.
+// In development: localhost variants are always included.
+// In production: set the CLIENT_URL environment variable to the deployed
+//   frontend URL (e.g. https://your-app.vercel.app) — it will be added
+//   automatically. Never use origin:'*' because credentials are enabled.
+const buildAllowedOrigins = () => {
+  const origins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  if (process.env.CLIENT_URL) {
+    origins.push(process.env.CLIENT_URL.trim());
+  }
+  return origins;
+};
+
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: (origin, callback) => {
+      const allowed = buildAllowedOrigins();
+      // Allow server-to-server / same-origin requests where origin is undefined
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: Origin '${origin}' is not permitted.`));
+      }
+    },
     credentials: true,
   })
 );
