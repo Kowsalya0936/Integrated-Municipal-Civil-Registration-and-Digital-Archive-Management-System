@@ -1,4 +1,4 @@
-﻿const User = require('./models/User');
+const User = require('./models/User');
 
 /**
  * Seeds initial required administrative and default officer accounts if they do not exist.
@@ -25,21 +25,42 @@ const seedInitialUsers = async () => {
     }
 
     // 2. Seed Officer
-    const existingOfficer = await User.findOne({ email: 'officer@municipal.gov' });
+    let existingOfficer = await User.findOne({ email: 'officer@municipal.gov' });
     if (!existingOfficer) {
       await User.create({
         name: 'Rajesh Sharma (Registrar)',
         email: 'officer@municipal.gov',
         mobile: '9876543211',
         password: 'OfficerPassword@123',
+        employeeId: 'REG-004521',
+        designation: 'Registrar (Civil Registration Officer)',
         address: 'Zone-1 Zonal Municipal Office, Desk 4',
         city: 'Metropolitan District',
         state: 'Central State',
         pincode: '110001',
+        jurisdictionAddress: 'Zone-1 Zonal Municipal Office, Desk 4, Metropolitan District, Central State - 110001',
         role: 'officer',
         department: 'Birth & Death Civil Registration Desk',
       });
       console.log('[Seed] Default Officer account created: officer@municipal.gov');
+    } else {
+      let needsUpdate = false;
+      if (!existingOfficer.employeeId) {
+        existingOfficer.employeeId = 'REG-004521';
+        needsUpdate = true;
+      }
+      if (!existingOfficer.designation) {
+        existingOfficer.designation = 'Registrar (Civil Registration Officer)';
+        needsUpdate = true;
+      }
+      if (!existingOfficer.jurisdictionAddress) {
+        existingOfficer.jurisdictionAddress = 'Zone-1 Zonal Municipal Office, Desk 4, Metropolitan District, Central State - 110001';
+        needsUpdate = true;
+      }
+      if (needsUpdate) {
+        await existingOfficer.save();
+        console.log('[Seed] Default Officer account updated with officer details.');
+      }
     }
 
     // 3. Seed Demo Citizen

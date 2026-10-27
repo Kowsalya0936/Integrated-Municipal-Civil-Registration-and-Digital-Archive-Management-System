@@ -16,6 +16,9 @@ const OfficerProfile = () => {
     pincode: user?.pincode || '',
     role: user?.role || 'officer',
     department: user?.department || '',
+    employeeId: user?.employeeId || '',
+    designation: user?.designation || '',
+    jurisdictionAddress: user?.jurisdictionAddress || '',
     isActive: user?.isActive !== false,
     _id: user?._id || '',
     createdAt: user?.createdAt || '',
@@ -51,7 +54,10 @@ const OfficerProfile = () => {
             state: u.state || '',
             pincode: u.pincode || '',
             role: u.role || 'officer',
-            department: u.department || 'Civil Registration & Verification Desk',
+            department: u.department || 'Birth & Death Civil Registration Desk',
+            employeeId: u.employeeId || '',
+            designation: u.designation || 'Registrar (Civil Registration Officer)',
+            jurisdictionAddress: u.jurisdictionAddress || '',
             isActive: u.isActive !== false,
             _id: u._id || '',
             createdAt: u.createdAt || '',
@@ -91,9 +97,8 @@ const OfficerProfile = () => {
   };
 
   const officerName = profileData.name || user?.name || 'Registrar';
-  const employeeId = profileData._id
-    ? `REG-${profileData._id.toString().slice(-6).toUpperCase()}`
-    : 'REG-OFFICER';
+  const displayEmployeeId = profileData.employeeId || (profileData._id ? `REG-${profileData._id.toString().slice(-6).toUpperCase()}` : 'REG-OFFICER');
+  const displayDesignation = profileData.designation || 'Registrar (Civil Registration Officer)';
 
   return (
     <div className="officer-dashboard-page py-4">
@@ -111,8 +116,8 @@ const OfficerProfile = () => {
                   <div className="fw-bold text-dark text-truncate" style={{ fontSize: '0.98rem' }}>
                     {officerName}
                   </div>
-                  <div className="text-muted small" style={{ fontSize: '0.8rem' }}>
-                    Registrar
+                  <div className="text-muted small text-truncate" style={{ fontSize: '0.8rem' }}>
+                    {displayDesignation}
                   </div>
                 </div>
               </div>
@@ -205,17 +210,26 @@ const OfficerProfile = () => {
                         {officerName}
                       </h2>
                       <span
-                        className="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold text-uppercase"
+                        className="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold"
                         style={{ fontSize: '0.74rem' }}
                       >
-                        <i className="bi bi-patch-check-fill me-1"></i> Registrar
+                        <i className="bi bi-patch-check-fill me-1"></i> {displayDesignation}
                       </span>
-                      <span
-                        className="badge bg-success px-2.5 py-1 rounded-pill text-white fw-semibold"
-                        style={{ fontSize: '0.74rem' }}
-                      >
-                        <i className="bi bi-check-circle-fill me-1"></i> Active Account
-                      </span>
+                      {profileData.isActive ? (
+                        <span
+                          className="badge bg-success px-2.5 py-1 rounded-pill text-white fw-semibold"
+                          style={{ fontSize: '0.74rem' }}
+                        >
+                          <i className="bi bi-check-circle-fill me-1"></i> Active Account
+                        </span>
+                      ) : (
+                        <span
+                          className="badge bg-danger px-2.5 py-1 rounded-pill text-white fw-semibold"
+                          style={{ fontSize: '0.74rem' }}
+                        >
+                          <i className="bi bi-x-circle-fill me-1"></i> Deactivated Account
+                        </span>
+                      )}
                       <span
                         className="badge bg-white bg-opacity-25 text-white px-2.5 py-1 rounded-pill fw-semibold"
                         style={{ fontSize: '0.74rem' }}
@@ -227,7 +241,7 @@ const OfficerProfile = () => {
                     <div className="text-light opacity-90 small d-flex flex-wrap gap-3 mt-2">
                       <span>
                         <i className="bi bi-person-badge me-1 text-warning"></i>
-                        ID: <strong className="text-white">{employeeId}</strong>
+                        ID: <strong className="text-white">{displayEmployeeId}</strong>
                       </span>
                       <span>
                         <i className="bi bi-envelope me-1 text-warning"></i>
@@ -380,7 +394,7 @@ const OfficerProfile = () => {
                       <div className="d-flex justify-content-between align-items-center">
                         <span className="text-muted small fw-semibold">Employee / Registrar ID</span>
                         <span className="badge bg-light text-primary border px-2 py-0.5 rounded fw-bold">
-                          {employeeId}
+                          {displayEmployeeId}
                         </span>
                       </div>
                       <div className="small text-secondary mt-1">
@@ -395,7 +409,7 @@ const OfficerProfile = () => {
                           <i className="bi bi-lock me-1 text-muted"></i> Read-Only
                         </span>
                       </div>
-                      <div className="fw-bold text-dark mt-1">Registrar (Civil Registration Officer)</div>
+                      <div className="fw-bold text-dark mt-1">{displayDesignation}</div>
                     </div>
 
                     <div className="mb-3 pb-3 border-bottom">
@@ -406,7 +420,7 @@ const OfficerProfile = () => {
                         </span>
                       </div>
                       <div className="fw-bold text-dark mt-1">
-                        {profileData.department || 'Civil Registration & Verification Desk'}
+                        {profileData.department || 'Not assigned'}
                       </div>
                     </div>
 
@@ -418,7 +432,7 @@ const OfficerProfile = () => {
                         </span>
                       </div>
                       <div className="fw-bold text-dark mt-1">
-                        {profileData.city || 'Municipal District'}
+                        {profileData.city || 'Not assigned'}
                       </div>
                     </div>
 
@@ -430,7 +444,7 @@ const OfficerProfile = () => {
                         </span>
                       </div>
                       <div className="fw-bold text-dark mt-1">
-                        {profileData.address || 'Municipal Corporation Headquarters'}
+                        {profileData.address || 'Not assigned'}
                       </div>
                     </div>
 
@@ -442,7 +456,7 @@ const OfficerProfile = () => {
                         </span>
                       </div>
                       <div className="fw-bold text-dark mt-1">
-                        {profileData.state || 'State'} — {profileData.pincode || '000000'}
+                        {profileData.state || 'Not assigned'} — {profileData.pincode || 'Not assigned'}
                       </div>
                     </div>
                   </div>
@@ -504,7 +518,10 @@ const OfficerProfile = () => {
                         </span>
                       </div>
                       <div className="fw-bold text-dark mt-1">
-                        {profileData.address}, {profileData.city}, {profileData.state} - {profileData.pincode}
+                        {profileData.jurisdictionAddress ||
+                          (profileData.address
+                            ? `${profileData.address}, ${profileData.city || ''}, ${profileData.state || ''} - ${profileData.pincode || ''}`
+                            : 'Not assigned')}
                       </div>
                     </div>
 
@@ -559,10 +576,21 @@ const OfficerProfile = () => {
                       <div className="col-12 col-md-4">
                         <div className="p-3 rounded-3 border bg-light h-100">
                           <div className="text-muted small fw-semibold">Account Status</div>
-                          <div className="fw-bold text-success mt-1 d-flex align-items-center gap-1">
-                            <i className="bi bi-check-circle-fill"></i> Active &amp; Authorized
-                          </div>
-                          <div className="small text-secondary mt-1">Full operational permissions</div>
+                          {profileData.isActive ? (
+                            <>
+                              <div className="fw-bold text-success mt-1 d-flex align-items-center gap-1">
+                                <i className="bi bi-check-circle-fill"></i> Active &amp; Authorized
+                              </div>
+                              <div className="small text-secondary mt-1">Full operational permissions</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="fw-bold text-danger mt-1 d-flex align-items-center gap-1">
+                                <i className="bi bi-x-circle-fill"></i> Deactivated / Suspended
+                              </div>
+                              <div className="small text-secondary mt-1">Operational access restricted</div>
+                            </>
+                          )}
                         </div>
                       </div>
 

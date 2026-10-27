@@ -13,17 +13,30 @@ const ManageUsers = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Officer Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [officerData, setOfficerData] = useState({
+  const initialOfficerData = {
     name: '',
     email: '',
     mobile: '',
     password: '',
-    department: 'Civil Registration & Verification Desk',
+    employeeId: '',
+    designation: 'Registrar (Civil Registration Officer)',
+    department: 'Birth & Death Civil Registration Desk',
     city: 'Metropolitan District',
-  });
+    address: 'Zone-1 Zonal Municipal Office, Desk 4',
+    state: 'Central State',
+    pincode: '110001',
+    jurisdictionAddress: '',
+    isActive: true,
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [officerData, setOfficerData] = useState(initialOfficerData);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
+
+  const handleInputChange = (field, value) => {
+    setOfficerData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -51,32 +64,57 @@ const ManageUsers = () => {
 
   const handleCreateOfficer = async (e) => {
     e.preventDefault();
-    if (officerData.password.length < 8) {
-      setModalError('Officer password must be at least 8 characters long.');
+    setModalError('');
+
+    // Validation
+    if (!officerData.name.trim()) {
+      setModalError('Officer full name is required.');
+      return;
+    }
+
+    if (!officerData.email.trim()) {
+      setModalError('Official email address is required.');
+      return;
+    }
+
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(officerData.email.trim())) {
+      setModalError('Please enter a valid official email address.');
+      return;
+    }
+
+    const mobileClean = officerData.mobile.replace(/\D/g, '');
+    if (mobileClean.length !== 10) {
+      setModalError('Official mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    if (!officerData.password || officerData.password.length < 8) {
+      setModalError('Officer account password must be at least 8 characters long.');
+      return;
+    }
+
+    if (officerData.pincode && !/^\d{6}$/.test(officerData.pincode.trim())) {
+      setModalError('Postal PIN code must be exactly 6 digits.');
       return;
     }
 
     setModalLoading(true);
-    setModalError('');
 
     try {
-      const res = await api.post('/admin/officers', officerData);
+      const res = await api.post('/admin/officers', {
+        ...officerData,
+        mobile: mobileClean,
+      });
       if (res.data && res.data.officer) {
-        setSuccess(`Officer '${res.data.officer.name}' created successfully.`);
+        setSuccess(`Officer '${res.data.officer.name}' provisioned successfully.`);
         setIsModalOpen(false);
-        setOfficerData({
-          name: '',
-          email: '',
-          mobile: '',
-          password: '',
-          department: 'Civil Registration & Verification Desk',
-          city: 'Metropolitan District',
-        });
+        setOfficerData(initialOfficerData);
         fetchUsers();
       }
     } catch (err) {
       console.error('[Create Officer Error]:', err);
-      setModalError(err.response?.data?.message || 'Failed to create officer account.');
+      setModalError(err.response?.data?.message || 'Failed to provision officer account.');
     } finally {
       setModalLoading(false);
     }
@@ -262,7 +300,7 @@ const ManageUsers = () => {
       {/* Create Officer Modal */}
       {isModalOpen && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content shadow-lg border-0">
               <div className="modal-header bg-dark text-white">
                 <h5 className="modal-title d-flex align-items-center">
@@ -277,90 +315,337 @@ const ManageUsers = () => {
               </div>
 
               <form onSubmit={handleCreateOfficer}>
-                <div className="modal-body p-4">
-                  {modalError && <div className="alert alert-danger py-2 small mb-3">{modalError}</div>}
+                <div className="modal-body p-4" style={{ maxHeight: '72vh', overflowY: 'auto' }}>
+                  {modalError && (
+                    <div className="alert alert-danger py-2 small mb-3 d-flex align-items-center">
+                      <i className="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+                      <div>{modalError}</div>
+                    </div>
+                  )}
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold small text-secondary">
-                      Officer Full Name <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. S. K. Verma (Registrar)"
-                      value={officerData.name}
-                      onChange={(e) => setOfficerData({ ...officerData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold small text-secondary">
-                      Official Email Address <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      placeholder="officer.zone1@municipal.gov"
-                      value={officerData.email}
-                      onChange={(e) => setOfficerData({ ...officerData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="row g-2 mb-3">
-                    <div className="col-6">
-                      <label className="form-label fw-bold small text-secondary">
-                        Mobile Number <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        placeholder="9876543210"
-                        value={officerData.mobile}
-                        onChange={(e) => setOfficerData({ ...officerData, mobile: e.target.value })}
-                        required
-                      />
+                  {/* SECTION A: Officer Identity & Account Details */}
+                  <div className="p-3 rounded-3 mb-4" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                      <span
+                        className="badge bg-primary rounded-circle p-1 d-flex align-items-center justify-content-center"
+                        style={{ width: '22px', height: '22px' }}
+                      >
+                        <i className="bi bi-person-fill text-white" style={{ fontSize: '0.75rem' }}></i>
+                      </span>
+                      <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.92rem' }}>
+                        Section A: Officer Identity &amp; Account Details
+                      </h6>
                     </div>
 
-                    <div className="col-6">
-                      <label className="form-label fw-bold small text-secondary">
-                        Password (min 8) <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        placeholder="••••••••"
-                        value={officerData.password}
-                        onChange={(e) => setOfficerData({ ...officerData, password: e.target.value })}
-                        required
-                      />
+                    <div className="row g-3">
+                      {/* Full Name */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Officer Full Name <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Rajesh Sharma"
+                          value={officerData.name}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* Employee / Registrar ID */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary d-flex justify-content-between align-items-center">
+                          <span>Employee / Registrar ID</span>
+                          <span className="text-muted fw-normal" style={{ fontSize: '0.72rem' }}>Optional</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. REG-004521"
+                          value={officerData.employeeId}
+                          onChange={(e) => handleInputChange('employeeId', e.target.value)}
+                        />
+                        <div className="form-text" style={{ fontSize: '0.72rem' }}>
+                          Leave empty to auto-generate unique registration ID.
+                        </div>
+                      </div>
+
+                      {/* Official Email */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Official Email Address <span className="text-danger">*</span>
+                        </label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-white text-muted">
+                            <i className="bi bi-envelope"></i>
+                          </span>
+                          <input
+                            type="email"
+                            className="form-control"
+                            placeholder="officer@municipal.gov"
+                            value={officerData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mobile Number */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Official Mobile Number <span className="text-danger">*</span>
+                        </label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-white text-muted">
+                            <i className="bi bi-telephone"></i>
+                          </span>
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            className="form-control"
+                            placeholder="9876543211 (10 digits)"
+                            value={officerData.mobile}
+                            onChange={(e) => handleInputChange('mobile', e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Initial Password */}
+                      <div className="col-12">
+                        <label className="form-label fw-bold small text-secondary">
+                          Initial Account Password <span className="text-danger">*</span>
+                        </label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-white text-muted">
+                            <i className="bi bi-key"></i>
+                          </span>
+                          <input
+                            type="password"
+                            className="form-control"
+                            placeholder="Minimum 8 characters"
+                            value={officerData.password}
+                            onChange={(e) => handleInputChange('password', e.target.value)}
+                            required
+                            minLength={8}
+                          />
+                        </div>
+                        <div className="form-text" style={{ fontSize: '0.72rem' }}>
+                          Hashed securely before saving into the database.
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold small text-secondary">Assigned Department</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={officerData.department}
-                      onChange={(e) => setOfficerData({ ...officerData, department: e.target.value })}
-                      required
-                    />
+                  {/* SECTION B: Official Posting & Jurisdictional Details */}
+                  <div className="p-3 rounded-3 mb-4" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                      <span
+                        className="badge bg-warning rounded-circle p-1 d-flex align-items-center justify-content-center"
+                        style={{ width: '22px', height: '22px' }}
+                      >
+                        <i className="bi bi-building text-dark" style={{ fontSize: '0.75rem' }}></i>
+                      </span>
+                      <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.92rem' }}>
+                        Section B: Official Posting &amp; Jurisdictional Details
+                      </h6>
+                    </div>
+
+                    <div className="row g-3">
+                      {/* Designation */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Official Designation <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Registrar (Civil Registration Officer)"
+                          list="designationOptions"
+                          value={officerData.designation}
+                          onChange={(e) => handleInputChange('designation', e.target.value)}
+                          required
+                        />
+                        <datalist id="designationOptions">
+                          <option value="Registrar (Civil Registration Officer)" />
+                          <option value="Additional Registrar (Birth & Death)" />
+                          <option value="Sub-Registrar / Verification Officer" />
+                          <option value="Assistant Municipal Registrar" />
+                          <option value="Senior Civil Registration Officer" />
+                        </datalist>
+                      </div>
+
+                      {/* Assigned Department */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Assigned Department <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Birth & Death Civil Registration Desk"
+                          list="deptOptions"
+                          value={officerData.department}
+                          onChange={(e) => handleInputChange('department', e.target.value)}
+                          required
+                        />
+                        <datalist id="deptOptions">
+                          <option value="Birth & Death Civil Registration Desk" />
+                          <option value="Civil Registration & Verification Desk" />
+                          <option value="Digital Archive & Records Verification Desk" />
+                          <option value="Municipal Vital Statistics Division" />
+                        </datalist>
+                      </div>
+
+                      {/* Municipality / District */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Municipality / District <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Metropolitan District"
+                          value={officerData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* Office Location */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Assigned Office Location <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Zone-1 Zonal Municipal Office, Desk 4"
+                          value={officerData.address}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* State */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          State <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Central State"
+                          value={officerData.state}
+                          onChange={(e) => handleInputChange('state', e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* Postal PIN Code */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">
+                          Postal PIN Code <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          className="form-control"
+                          placeholder="e.g. 110001 (6 digits)"
+                          value={officerData.pincode}
+                          onChange={(e) => handleInputChange('pincode', e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* Jurisdictional Address */}
+                      <div className="col-12">
+                        <label className="form-label fw-bold small text-secondary d-flex justify-content-between align-items-center">
+                          <span>Jurisdictional Address (Official Full Location)</span>
+                          <span className="text-muted fw-normal" style={{ fontSize: '0.72rem' }}>Optional</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          className="form-control"
+                          placeholder="Leave blank to auto-compose from Office Location, District, State & PIN"
+                          value={officerData.jurisdictionAddress}
+                          onChange={(e) => handleInputChange('jurisdictionAddress', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION C: Account Permissions & Status */}
+                  <div className="p-3 rounded-3" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                      <span
+                        className="badge bg-success rounded-circle p-1 d-flex align-items-center justify-content-center"
+                        style={{ width: '22px', height: '22px' }}
+                      >
+                        <i className="bi bi-shield-lock-fill text-white" style={{ fontSize: '0.75rem' }}></i>
+                      </span>
+                      <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.92rem' }}>
+                        Section C: Account Permissions &amp; Status
+                      </h6>
+                    </div>
+
+                    <div className="row g-3">
+                      {/* Role (Read-only / Enforced) */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">System Account Role</label>
+                        <input
+                          type="text"
+                          className="form-control bg-light"
+                          value="Officer / Registrar (Role: officer)"
+                          disabled
+                          readOnly
+                        />
+                        <div className="form-text" style={{ fontSize: '0.72rem' }}>
+                          <i className="bi bi-lock me-1"></i> Centrally restricted to Municipal Officer privileges.
+                        </div>
+                      </div>
+
+                      {/* Account Status */}
+                      <div className="col-12 col-md-6">
+                        <label className="form-label fw-bold small text-secondary">Account Status</label>
+                        <select
+                          className="form-select"
+                          value={officerData.isActive ? 'true' : 'false'}
+                          onChange={(e) => handleInputChange('isActive', e.target.value === 'true')}
+                        >
+                          <option value="true">Active (Permitted to log in and verify records)</option>
+                          <option value="false">Deactivated (Account access suspended)</option>
+                        </select>
+                        <div className="form-text" style={{ fontSize: '0.72rem' }}>
+                          Active accounts can immediately access the Registrar Portal.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="modal-footer bg-light">
+                <div className="modal-footer bg-light border-top">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
+                    className="btn btn-outline-secondary px-3"
                     onClick={() => setIsModalOpen(false)}
                     disabled={modalLoading}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-warning fw-bold text-dark" disabled={modalLoading}>
-                    {modalLoading ? 'Creating...' : 'Provision Account'}
+                  <button type="submit" className="btn btn-warning fw-bold text-dark px-4 shadow-sm" disabled={modalLoading}>
+                    {modalLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Provisioning Account...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle-fill me-1.5"></i>
+                        Provision Account
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

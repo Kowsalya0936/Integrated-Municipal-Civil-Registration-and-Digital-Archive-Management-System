@@ -51,9 +51,23 @@ const userSchema = new mongoose.Schema(
       enum: ['citizen', 'officer', 'admin'],
       default: 'citizen',
     },
+    employeeId: {
+      type: String,
+      trim: true,
+    },
+    designation: {
+      type: String,
+      trim: true,
+      default: 'Registrar (Civil Registration Officer)',
+    },
     department: {
       type: String,
       default: 'Civil Registration Department',
+      trim: true,
+    },
+    jurisdictionAddress: {
+      type: String,
+      trim: true,
     },
     isActive: {
       type: Boolean,

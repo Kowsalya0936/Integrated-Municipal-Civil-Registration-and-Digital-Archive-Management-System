@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
@@ -85,6 +86,8 @@ const getUsers = async (req, res) => {
         { email: { $regex: search.trim(), $options: 'i' } },
         { mobile: { $regex: search.trim(), $options: 'i' } },
         { city: { $regex: search.trim(), $options: 'i' } },
+        { department: { $regex: search.trim(), $options: 'i' } },
+        { employeeId: { $regex: search.trim(), $options: 'i' } },
       ];
     }
 
@@ -109,16 +112,60 @@ const getUsers = async (req, res) => {
 // @access  Private (Admin ONLY)
 const createOfficer = async (req, res) => {
   try {
-    const { name, email, mobile, password, address, city, state, pincode, department } = req.body;
+    const {
+      name,
+      email,
+      mobile,
+      password,
+      employeeId,
+      designation,
+      department,
+      city,
+      address,
+      state,
+      pincode,
+      jurisdictionAddress,
+      isActive,
+    } = req.body;
 
-    if (!name || !email || !mobile || !password) {
+    if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, mobile, and password are required for creating an officer account.',
+        message: 'Officer full name is required.',
       });
     }
 
-    if (password.length < 8) {
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Official email address is required.',
+      });
+    }
+
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid official email address.',
+      });
+    }
+
+    if (!mobile || !mobile.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Official mobile number is required.',
+      });
+    }
+
+    const mobileClean = mobile.trim();
+    if (!/^\d{10}$/.test(mobileClean.replace(/\D/g, ''))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mobile number must contain 10 digits.',
+      });
+    }
+
+    if (!password || password.length < 8) {
       return res.status(400).json({
         success: false,
         message: 'Officer password must be at least 8 characters long.',
@@ -133,17 +180,46 @@ const createOfficer = async (req, res) => {
       });
     }
 
+    // Check employeeId uniqueness if provided
+    let finalEmployeeId = employeeId ? employeeId.trim().toUpperCase() : '';
+    if (finalEmployeeId) {
+      const existingEmp = await User.findOne({ employeeId: finalEmployeeId });
+      if (existingEmp) {
+        return res.status(400).json({
+          success: false,
+          message: `Employee ID '${finalEmployeeId}' is already assigned to another user.`,
+        });
+      }
+    } else {
+      // Auto-generate employeeId if omitted
+      const tempId = new mongoose.Types.ObjectId();
+      finalEmployeeId = `REG-${tempId.toString().slice(-6).toUpperCase()}`;
+    }
+
+    const finalAddress = (address || 'Zone-1 Zonal Municipal Office, Desk 4').trim();
+    const finalCity = (city || 'Metropolitan District').trim();
+    const finalState = (state || 'Central State').trim();
+    const finalPincode = (pincode || '110001').trim();
+    const finalJurisdiction = (
+      jurisdictionAddress ||
+      `${finalAddress}, ${finalCity}, ${finalState} - ${finalPincode}`
+    ).trim();
+
     const officer = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      mobile: mobile.trim(),
+      mobile: mobileClean,
       password,
-      address: (address || 'Municipal Corporation Office').trim(),
-      city: (city || 'Municipal District').trim(),
-      state: (state || 'State').trim(),
-      pincode: (pincode || '000000').trim(),
+      employeeId: finalEmployeeId,
+      designation: (designation || 'Registrar (Civil Registration Officer)').trim(),
+      department: (department || 'Birth & Death Civil Registration Desk').trim(),
+      address: finalAddress,
+      city: finalCity,
+      state: finalState,
+      pincode: finalPincode,
+      jurisdictionAddress: finalJurisdiction,
       role: 'officer',
-      department: department || 'Civil Registration & Verification Desk',
+      isActive: isActive !== false && isActive !== 'false',
     });
 
     await logAudit({
@@ -152,13 +228,19 @@ const createOfficer = async (req, res) => {
       role: req.user.role,
       action: 'OFFICER_CREATED',
       targetRecordId: officer._id.toString(),
-      details: { officerName: officer.name, officerEmail: officer.email },
+      details: {
+        officerName: officer.name,
+        officerEmail: officer.email,
+        employeeId: officer.employeeId,
+        designation: officer.designation,
+        department: officer.department,
+      },
       ipAddress: req.ip,
     });
 
     return res.status(201).json({
       success: true,
-      message: `Municipal Officer '${officer.name}' created successfully.`,
+      message: `Municipal Officer '${officer.name}' provisioned successfully with ID ${officer.employeeId}.`,
       officer: officer.toSafeObject(),
     });
   } catch (error) {
